@@ -91,3 +91,10 @@ ENV/
 # hdf5
 *.h5
 *.hdf5
+
+# Custom project files
+/train_images/
+/test_images/
+/results_imgs-num-epochs=3/
+/results_imgs-num-epochs=59/
+
