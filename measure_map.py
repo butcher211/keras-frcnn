@@ -5,6 +5,7 @@ import sys
 import pickle
 from optparse import OptionParser
 import time
+import re
 from keras_frcnn import config
 import keras_frcnn.resnet as nn
 from keras import backend as K
@@ -18,6 +19,7 @@ from sklearn.metrics import average_precision_score
 def get_map(pred, gt, f):
 	T = {}
 	P = {}
+	iou_result = 0
 	fx, fy = f
 
 	for bbox in gt:
@@ -52,6 +54,7 @@ def get_map(pred, gt, f):
 			if gt_seen:
 				continue
 			iou = data_generators.iou((pred_x1, pred_y1, pred_x2, pred_y2), (gt_x1, gt_y1, gt_x2, gt_y2))
+			iou += iou_result
 			if iou >= 0.5:
 				found_match = True
 				gt_box['bbox_matched'] = True
@@ -60,6 +63,8 @@ def get_map(pred, gt, f):
 				continue
 
 		T[pred_class].append(int(found_match))
+		print("IoU addiert: " + iou_result)
+		print("~IoU@0.50: " + iou_result)
 
 	for gt_box in gt:
 		if not gt_box['bbox_matched']: # and not gt_box['difficult']:
@@ -86,6 +91,7 @@ parser.add_option("--config_filename", dest="config_filename", help=
 				default="config.pickle")
 parser.add_option("-o", "--parser", dest="parser", help="Parser to use. One of simple or pascal_voc",
 				default="pascal_voc"),
+parser.add_option("-i", "--output_model_number", dest="model_iter", help="Models of Epoch step to use."),
 
 (options, args) = parser.parse_args()
 
@@ -104,6 +110,10 @@ config_output_filename = options.config_filename
 
 with open(config_output_filename, 'rb') as f_in:
 	C = pickle.load(f_in)
+
+if options.model_iter is not None:
+	x = re.match("^(.+)(\.hdf5)$", C.model_path)
+	C.model_path = x.group(1) + "_" + options.model_iter + x.group(2)
 
 # turn off any data augmentation at test time
 C.use_horizontal_flips = False
@@ -181,9 +191,9 @@ model_classifier.load_weights(C.model_path, by_name=True)
 model_rpn.compile(optimizer='sgd', loss='mse')
 model_classifier.compile(optimizer='sgd', loss='mse')
 
-all_imgs, _, _ = get_data(options.test_path)
-test_imgs = [s for s in all_imgs if s['imageset'] == 'test']
-
+test_imgs, _, _ = get_data(options.test_path, 'test')
+#test_imgs = [s for s in all_imgs if s['imageset'] == 'test']
+begin = time.time()
 T = {}
 P = {}
 for idx, img_data in enumerate(test_imgs):
@@ -281,3 +291,4 @@ for idx, img_data in enumerate(test_imgs):
 	print('mAP = {}'.format(np.mean(np.array(all_aps))))
 	#print(T)
 	#print(P)
+print('Completely Elapsed time = {}'.format(time.time() - begin))
