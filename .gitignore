@@ -97,4 +97,4 @@ ENV/
 /test_images/
 /results_imgs-num-epochs=3/
 /results_imgs-num-epochs=59/
-
+annotate*.txt
