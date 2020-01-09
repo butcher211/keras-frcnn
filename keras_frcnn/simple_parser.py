@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-def get_data(input_path, imageset):
+def get_data(input_path):
 	found_bg = False
 	all_imgs = {}
 
@@ -39,7 +39,7 @@ def get_data(input_path, imageset):
 				all_imgs[filename]['width'] = cols
 				all_imgs[filename]['height'] = rows
 				all_imgs[filename]['bboxes'] = []
-				all_imgs[filename]['imageset'] = imageset
+				all_imgs[filename]['imageset'] = 'test'
 
 			all_imgs[filename]['bboxes'].append({'class': class_name, 'x1': int(x1), 'x2': int(x2), 'y1': int(y1), 'y2': int(y2)})
 
